@@ -1,0 +1,7 @@
+model\BlockPos.class
+managers\PriceManager.class
+managers\ChestManager.class
+managers\ShopManager.class
+listener\ShopRestrictionListener.class
+main\Main.class
+managers\PlayerListManager.class
