@@ -1,7 +1,7 @@
-model\BlockPos.class
-managers\PriceManager.class
-managers\ChestManager.class
-managers\ShopManager.class
-listener\ShopRestrictionListener.class
-main\Main.class
-managers\PlayerListManager.class
+io\dofault\supermarket\managers\PlayerListManager.class
+io\dofault\supermarket\managers\PriceManager.class
+io\dofault\supermarket\listener\ShopRestrictionListener.class
+io\dofault\supermarket\model\BlockPos.class
+io\dofault\supermarket\main\Main.class
+io\dofault\supermarket\managers\ChestManager.class
+io\dofault\supermarket\managers\ShopManager.class

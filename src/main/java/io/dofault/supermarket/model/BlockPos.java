@@ -1,4 +1,4 @@
-package model;
+package io.dofault.supermarket.model;
 
 import org.bukkit.Location;
 import org.bukkit.block.Block;

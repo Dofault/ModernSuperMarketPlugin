@@ -1,7 +1,8 @@
 name: CubelinesShop
 version: 1.0
 author: dofault
-main: main.Main
+main: io.dofault.supermarket.main.Main
+api-version: '1.21.4'
 
 
 commands:

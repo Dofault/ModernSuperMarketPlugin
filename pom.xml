@@ -7,6 +7,14 @@
   <version>1.0-SNAPSHOT</version>
   <name>ModernSuperMarket</name>
   <url>http://maven.apache.org</url>
+
+    <repositories>
+    <repository>
+      <id>papermc</id>
+      <url>https://repo.papermc.io/repository/maven-public/</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -14,13 +22,15 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
-      <dependency>
-      <groupId>org.spigotmc</groupId>
-      <artifactId>spigot-api</artifactId>
-      <version>1.21.1-R0.1-SNAPSHOT</version>
-      <scope>provided</scope>
-  </dependency>
 
+
+
+        <dependency>
+        <groupId>io.papermc.paper</groupId>
+        <artifactId>paper-api</artifactId>
+        <version>1.21.8-R0.1-SNAPSHOT</version>
+        <scope>provided</scope>
+        </dependency>
 
   
   </dependencies>
@@ -32,6 +42,17 @@
   </properties>
 
 <build>
+
+<!--
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>plugin.yml</include>
+                </includes>
+            </resource>
+        </resources>-->
+        
     <plugins>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -46,7 +67,7 @@
                     <configuration>
                         <target>
                             <copy file="${project.build.directory}/${project.build.finalName}.jar"
-                                  todir="C:/Users/Dofault/Documents/serveur/plugins" />
+                                  todir="C:\Users\Dofault\Documents\PAPERSERVER\plugins" />
                         </target>
                     </configuration>
                 </execution>

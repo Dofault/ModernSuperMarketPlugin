@@ -1,8 +1,8 @@
-package listener;
+package io.dofault.supermarket.listener;
 
-import managers.ChestManager;
-import managers.PlayerListManager;
-import managers.ShopManager;
+import io.dofault.supermarket.managers.ChestManager;
+import io.dofault.supermarket.managers.PlayerListManager;
+import io.dofault.supermarket.managers.ShopManager;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

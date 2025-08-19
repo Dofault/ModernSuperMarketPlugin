@@ -1,5 +1,5 @@
 
-package managers;
+package io.dofault.supermarket.managers;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 

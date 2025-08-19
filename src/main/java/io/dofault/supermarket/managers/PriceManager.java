@@ -1,4 +1,4 @@
-package managers;
+package io.dofault.supermarket.managers;
 
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;

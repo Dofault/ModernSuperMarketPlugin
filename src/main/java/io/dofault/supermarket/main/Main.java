@@ -1,12 +1,12 @@
-package main;
+package io.dofault.supermarket.main;
 
 
 
-import listener.ShopRestrictionListener;
-import managers.ChestManager;
-import managers.PlayerListManager;
-import managers.PriceManager;
-import managers.ShopManager;
+import io.dofault.supermarket.listener.ShopRestrictionListener;
+import io.dofault.supermarket.managers.ChestManager;
+import io.dofault.supermarket.managers.PlayerListManager;
+import io.dofault.supermarket.managers.PriceManager;
+import io.dofault.supermarket.managers.ShopManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -37,6 +37,9 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+
+        saveResource("config.yml", /* replace */ false);
+
         saveDefaultConfig();
 
 

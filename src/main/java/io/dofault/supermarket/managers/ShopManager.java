@@ -1,4 +1,4 @@
-package managers;
+package io.dofault.supermarket.managers;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -7,10 +7,8 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-
-import main.Main;
-
-import model.BlockPos;
+import io.dofault.supermarket.main.Main;
+import io.dofault.supermarket.model.BlockPos;
 
 import java.util.HashMap;
 import java.util.HashSet;
