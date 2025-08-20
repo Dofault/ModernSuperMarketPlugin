@@ -4,6 +4,7 @@ import io.dofault.supermarket.managers.ChestManager;
 import io.dofault.supermarket.managers.PlayerListManager;
 import io.dofault.supermarket.managers.ShopManager;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
@@ -11,19 +12,26 @@ import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class ShopRestrictionListener implements Listener {
 
     private final PlayerListManager playerListManager;
     private ChestManager chestManager;
     private ShopManager shopManager;
+    private final JavaPlugin plugin;
 
-    public ShopRestrictionListener(PlayerListManager playerListManager, ChestManager chestManager, ShopManager  shopManager) {
+
+    public ShopRestrictionListener(JavaPlugin plugin, PlayerListManager playerListManager, ChestManager chestManager, ShopManager  shopManager) {
+        this.plugin = plugin;
         this.playerListManager = playerListManager;
         this.chestManager = chestManager;
         this.shopManager = shopManager;
@@ -32,11 +40,16 @@ public class ShopRestrictionListener implements Listener {
    // Empêche toute interaction avec les blocs
    @EventHandler
    public void onBlockInteract(PlayerInteractEvent e) {
+
+       if (e.getHand() != EquipmentSlot.HAND) return; // ignore OFF_HAND
+       if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
        Player player = e.getPlayer();
+
+
        Block block = e.getClickedBlock();
 
-       if (block == null) {
-           //System.out.println("[DEBUG] Bloc cliqué est null pour " + player.getName());
+       if (block == null || !(block.getState() instanceof Container)) {
            return;
        }
 
@@ -60,9 +73,9 @@ public class ShopRestrictionListener implements Listener {
                if (block.getState() instanceof Container container) {
                    //System.out.println("[DEBUG] Ouverture forcée de l'inventaire pour " + player.getName());
                    player.openInventory(container.getInventory());
-               } else {
-                   //System.out.println("[DEBUG] Le bloc n'est pas un container valide");
-               }
+                                      e.setCancelled(true);
+
+               } 
 
                return; // stop ici pour éviter d'annuler
            }
@@ -76,19 +89,73 @@ public class ShopRestrictionListener implements Listener {
    }
 
 
+   
     @EventHandler
-    public void onBlockPlace(BlockPlaceEvent e) {
-        if (playerListManager.isInShop(e.getPlayer().getUniqueId())) {
-            e.setCancelled(true);
+    public void onPlayerClick(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return; // ignore OFF_HAND
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
+        Block blockClicked = event.getClickedBlock();
+        if (blockClicked == null) return;
+        if (!blockClicked.getType().name().contains("GLASS")) return;
+
+        Player player = event.getPlayer();
+        Block blockBelow = player.getLocation().getBlock();
+
+        if (shopManager.isEntry(blockBelow) && !playerListManager.isInShop(player.getUniqueId())) {
+            chestManager.reloadChests();
+            Location exitLoc = shopManager.getExitLocation(player);
+            playerListManager.enterShop(player);
+            player.teleport(exitLoc);
+            player.sendMessage(ChatColor.GREEN + "Vous êtes entré dans le shop !");
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (!playerListManager.isInShop(player.getUniqueId())) {
+                        this.cancel(); // auto-détruit la tâche
+                        return;
+                    }
+
+                    double balance = shopManager.getBalance(player);
+                    player.sendActionBar(
+                        ChatColor.GOLD + "Balance: " + 
+                        ChatColor.AQUA + "$" + balance + // balance en surbrillance
+                        ChatColor.GOLD + " | /supermarket <pay/difference>"
+                    );
+                }
+            }.runTaskTimer(plugin, 0L, 20L);
         }
+        else
+        {
+            if (shopManager.isExit(blockBelow) && playerListManager.isInShop(player.getUniqueId())) {
+                if (shopManager.canPlayerExit(player)) {
+                    Location entryLoc = shopManager.getEntryLocation(player);
+                    playerListManager.leaveShop(player);
+                    player.teleport(entryLoc);
+                    
+                    player.sendMessage(ChatColor.GREEN + "Vous êtes sorti du shop !");
+                } else {
+                    player.sendMessage(ChatColor.RED + "Vous devez payer pour pouvoir sortir !");
+                }
+            }
+        }
+
+
     }
+
+
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
         if (playerListManager.isInShop(e.getPlayer().getUniqueId())) {
-            e.setCancelled(true);
+            e.setCancelled(true); 
+
         }
     }
+
+
+
 
     // Empêche de jeter des items
     @EventHandler
@@ -99,14 +166,6 @@ public class ShopRestrictionListener implements Listener {
     }
 
 
-    @EventHandler
-    public void onBoatDestroy(VehicleDestroyEvent event) {
-        if (event.getVehicle() instanceof Boat && event.getAttacker() instanceof Player player) {
-            if (playerListManager.isInShop(player.getUniqueId())) {
-                event.setCancelled(true);
-            }
-        }
-    }
 
     @EventHandler
     public void onItemPickup(EntityPickupItemEvent event) {
@@ -141,18 +200,6 @@ public class ShopRestrictionListener implements Listener {
 
         if (playerListManager.isInShop(player.getUniqueId())) {
             event.setCancelled(true); // annule tous les dégâts
-        }
-    }
-
-    @EventHandler
-    public void onPotionEffect(EntityPotionEffectEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-
-        if (playerListManager.isInShop(player.getUniqueId())) {
-            event.setCancelled(true); // empêche tout effet de potion d'être appliqué ou modifié
-            player.getActivePotionEffects().forEach(effect -> {
-                player.removePotionEffect(effect.getType());
-            });
         }
     }
 

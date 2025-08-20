@@ -21,6 +21,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -62,7 +63,7 @@ public class Main extends JavaPlugin implements Listener {
         shopManager = new ShopManager(this, playerlist, priceManager);
         chestManager= new ChestManager(this, priceManager);
 
-        getServer().getPluginManager().registerEvents(new ShopRestrictionListener(playerlist, chestManager, shopManager), this);
+        getServer().getPluginManager().registerEvents(new ShopRestrictionListener(this, playerlist, chestManager, shopManager), this);
 
 
         getLogger().info("Supermarket plugin activé !!");
@@ -175,6 +176,11 @@ public class Main extends JavaPlugin implements Listener {
                 return true;
 
             case "difference":
+                if(!playerlist.isInShop(player.getUniqueId())) {
+                    player.sendMessage(ChatColor.RED + "Vous devez être dans le shop !");
+                    return true;
+                }
+
                 Map<ItemStack, Integer> diff = shopManager.getInventoryDifference(player);
 
                 if (diff.isEmpty()) {
@@ -211,6 +217,11 @@ public class Main extends JavaPlugin implements Listener {
 
 
             case "pay":
+
+                if(!playerlist.isInShop(player.getUniqueId())) {
+                    player.sendMessage(ChatColor.RED + "Vous devez être dans le shop !");
+                    return true;
+                }
                 shopManager.payUser(player, econ);
                 return true;
 
@@ -256,54 +267,21 @@ public class Main extends JavaPlugin implements Listener {
     }
 
 
+
+
     @EventHandler
-    public void onPlayerClick(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-
-        Block blockClicked = event.getClickedBlock();
-        if (blockClicked == null) return;
-        if (!blockClicked.getType().name().contains("GLASS")) return;
-
+    public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        Block blockBelow = player.getLocation().getBlock();
 
-        if (shopManager.isEntry(blockBelow) && !playerlist.isInShop(player.getUniqueId())) {
-            chestManager.reloadChests();
-            Location exitLoc = shopManager.getExitLocation(player);
-            playerlist.enterShop(player);
-            player.teleport(exitLoc);
-            player.sendMessage(ChatColor.GREEN + "Vous êtes entré dans le shop !");
-
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (!playerlist.isInShop(player.getUniqueId())) {
-                        this.cancel(); // auto-détruit la tâche
-                        return;
-                    }
-
-                    double balance = shopManager.getBalance(player);
-                    player.sendActionBar(
-                        ChatColor.GOLD + "Balance: " + 
-                        ChatColor.AQUA + "$" + balance + // balance en surbrillance
-                        ChatColor.GOLD + " | /supermarket <pay/difference>"
-                    );
-                }
-            }.runTaskTimer(this, 0L, 20L);
-        }
-
-        if (shopManager.isExit(blockBelow) && playerlist.isInShop(player.getUniqueId())) {
-            if (shopManager.canPlayerExit(player)) {
-                Location entryLoc = shopManager.getEntryLocation(player);
-                playerlist.leaveShop(player);
-                player.teleport(entryLoc);
-                
-                player.sendMessage(ChatColor.GREEN + "Vous êtes sorti du shop !");
-            } else {
-                player.sendMessage(ChatColor.RED + "Vous devez payer pour pouvoir sortir !");
-            }
+        if (playerlist.isInShop(player.getUniqueId())) {
+            // On force la sortie comme normalement
+            Location entryLoc = shopManager.getEntryLocation(player);
+            playerlist.leaveShop(player);
+            player.teleport(entryLoc);
         }
     }
+
+
 
 
     

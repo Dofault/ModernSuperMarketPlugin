@@ -217,6 +217,9 @@ public class ChestManager {
 
 
     public Set<String> getChestsIds() {
+        if (!chestConfig.contains("chests") || chestConfig.getConfigurationSection("chests") == null) {
+            return Collections.emptySet();
+        }
         return chestConfig.getConfigurationSection("chests").getKeys(false);
     }
 
