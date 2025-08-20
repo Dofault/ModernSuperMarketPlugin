@@ -3,6 +3,10 @@ package io.dofault.supermarket.listener;
 import io.dofault.supermarket.managers.ChestManager;
 import io.dofault.supermarket.managers.PlayerListManager;
 import io.dofault.supermarket.managers.ShopManager;
+
+import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.block.Container;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,51 +29,51 @@ public class ShopRestrictionListener implements Listener {
         this.shopManager = shopManager;
     }
 
-//    // Empêche toute interaction avec les blocs
-//    @EventHandler
-//    public void onBlockInteract(PlayerInteractEvent e) {
-//        Player player = e.getPlayer();
-//        Block block = e.getClickedBlock();
-//
-//        if (block == null) {
-//            //System.out.println("[DEBUG] Bloc cliqué est null pour " + player.getName());
-//            return;
-//        }
-//
-//        Location loc = block.getLocation();
-//        //System.out.println("[DEBUG] " + player.getName() + " a cliqué sur le bloc en " + loc);
-//
-//        // Vérifie si le bloc cliqué est un coffre enregistré dans ChestManager
-//        for (String chestId : chestManager.getChestsIds()) {
-//            Location chestLoc = chestManager.getChestLocation(chestId);
-//            if (chestLoc.equals(loc)) {
-//                //System.out.println("[DEBUG] Le bloc correspond au coffre enregistré: " + chestId);
-//
-//                if (!playerListManager.isInShop(player.getUniqueId())) {
-//                    e.setCancelled(true);
-//                    return;
-//                } else {
-//                    //System.out.println("[DEBUG] " + player.getName() + " est dans le shop, interaction autorisée");
-//                }
-//
-//                // Force l'ouverture du coffre
-//                if (block.getState() instanceof Container container) {
-//                    //System.out.println("[DEBUG] Ouverture forcée de l'inventaire pour " + player.getName());
-//                    player.openInventory(container.getInventory());
-//                } else {
-//                    //System.out.println("[DEBUG] Le bloc n'est pas un container valide");
-//                }
-//
-//                return; // stop ici pour éviter d'annuler
-//            }
-//        }
-//
-//        if(playerListManager.isInShop(player.getUniqueId())) {
-//            e.setCancelled(true);
-//
-//        }
-//
-//    }
+   // Empêche toute interaction avec les blocs
+   @EventHandler
+   public void onBlockInteract(PlayerInteractEvent e) {
+       Player player = e.getPlayer();
+       Block block = e.getClickedBlock();
+
+       if (block == null) {
+           //System.out.println("[DEBUG] Bloc cliqué est null pour " + player.getName());
+           return;
+       }
+
+       Location loc = block.getLocation();
+       //System.out.println("[DEBUG] " + player.getName() + " a cliqué sur le bloc en " + loc);
+
+       // Vérifie si le bloc cliqué est un coffre enregistré dans ChestManager
+       for (String chestId : chestManager.getChestsIds()) {
+           Location chestLoc = chestManager.getChestLocation(chestId);
+           if (chestLoc.equals(loc)) {
+               //System.out.println("[DEBUG] Le bloc correspond au coffre enregistré: " + chestId);
+
+               if (!playerListManager.isInShop(player.getUniqueId())) {
+                   e.setCancelled(true);
+                   return;
+               } else {
+                   //System.out.println("[DEBUG] " + player.getName() + " est dans le shop, interaction autorisée");
+               }
+
+               // Force l'ouverture du coffre
+               if (block.getState() instanceof Container container) {
+                   //System.out.println("[DEBUG] Ouverture forcée de l'inventaire pour " + player.getName());
+                   player.openInventory(container.getInventory());
+               } else {
+                   //System.out.println("[DEBUG] Le bloc n'est pas un container valide");
+               }
+
+               return; // stop ici pour éviter d'annuler
+           }
+       }
+
+       if(playerListManager.isInShop(player.getUniqueId())) {
+           e.setCancelled(true);
+
+       }
+
+   }
 
 
     @EventHandler

@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 
 import io.dofault.supermarket.main.Main;
 import io.dofault.supermarket.model.BlockPos;
+import net.milkbowl.vault.economy.Economy;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,9 +24,11 @@ public class ShopManager {
     private BlockPos entryPos;
     private BlockPos exitPos;
     private PlayerListManager playerListManager;
+    private PriceManager priceManager;
 
-    public ShopManager(Main plugin, PlayerListManager playerlist) {
+    public ShopManager(Main plugin, PlayerListManager playerlist, PriceManager priceManager) {
         this.plugin = plugin;
+        this.priceManager = priceManager;
         this.playerListManager = playerlist;
         loadShop();
     }
@@ -74,37 +77,101 @@ public class ShopManager {
     }
 
     // --- Dans ShopManager ---
-    public Map<Material, Integer> getInventoryDifference(Player player) {
+    public Map<ItemStack, Integer> getInventoryDifference(Player player) {
         ItemStack[] savedInventory = playerListManager.getSavedInventory(player);
         ItemStack[] currentInventory = player.getInventory().getContents();
 
-        Map<Material, Integer> savedMap = new HashMap<>();
-        Map<Material, Integer> currentMap = new HashMap<>();
+        Map<ItemStack, Integer> savedMap = new HashMap<>();
+        Map<ItemStack, Integer> currentMap = new HashMap<>();
 
         for (ItemStack item : savedInventory) {
             if (item != null && item.getType() != Material.AIR) {
-                savedMap.merge(item.getType(), item.getAmount(), Integer::sum);
+                ItemStack key = item.clone();
+                key.setAmount(1); // normaliser la quantité pour comparaison
+                savedMap.merge(key, item.getAmount(), Integer::sum);
             }
         }
         for (ItemStack item : currentInventory) {
             if (item != null && item.getType() != Material.AIR) {
-                currentMap.merge(item.getType(), item.getAmount(), Integer::sum);
+                ItemStack key = item.clone();
+                key.setAmount(1);
+                currentMap.merge(key, item.getAmount(), Integer::sum);
             }
         }
 
-        Set<Material> allMats = new HashSet<>(savedMap.keySet());
-        allMats.addAll(currentMap.keySet());
+        Set<ItemStack> allKeys = new HashSet<>();
+        allKeys.addAll(savedMap.keySet());
+        allKeys.addAll(currentMap.keySet());
 
-        Map<Material, Integer> diff = new HashMap<>();
-        for (Material mat : allMats) {
-            int savedAmount = savedMap.getOrDefault(mat, 0);
-            int currentAmount = currentMap.getOrDefault(mat, 0);
+        Map<ItemStack, Integer> diff = new HashMap<>();
+        for (ItemStack key : allKeys) {
+            int savedAmount = savedMap.getOrDefault(key, 0);
+            int currentAmount = currentMap.getOrDefault(key, 0);
             int delta = currentAmount - savedAmount;
-            if (delta != 0) diff.put(mat, delta);
+            if (delta != 0) diff.put(key, delta);
         }
 
         return diff;
     }
+
+    public boolean canPlayerExit(Player player) {
+        Map<ItemStack, Integer> diff = getInventoryDifference(player);
+
+        for (Map.Entry<ItemStack, Integer> entry : diff.entrySet()) {
+            if (entry.getValue() > 0) {
+                // Le joueur a plus d'items que dans son inventaire sauvegardé
+                return false;
+            }
+        }
+
+        return true; // Aucun surplus détecté
+    }
+
+    public boolean payUser(Player player, Economy economy) {
+        Map<ItemStack, Integer> diff = getInventoryDifference(player);
+        double totalCost = 0;
+
+        for (Map.Entry<ItemStack, Integer> entry : diff.entrySet()) {
+            int amount = entry.getValue();
+            if (amount > 0) {
+                // Conversion en String via Material
+                double price = priceManager.getPrice(entry.getKey().getType().toString());
+                totalCost += price * amount;
+            }
+        }
+
+        if (totalCost > 0) {
+            if (!economy.has(player, totalCost)) {
+                player.sendMessage("§cVous n'avez pas assez d'argent pour payer votre inventaire !");
+                return false;
+            }
+            economy.withdrawPlayer(player, totalCost);
+            player.sendMessage("§aVous avez payé §6" + totalCost + " §a€ pour vos articles.");
+        }
+
+        // Sauvegarde l'inventaire actuel uniquement si le paiement a réussi
+        playerListManager.saveInventory(player);
+        return true;
+    }
+
+
+
+    
+    public double getBalance(Player player) {
+        Map<ItemStack, Integer> diff = getInventoryDifference(player);
+        double total = 0.0;
+
+        for (Map.Entry<ItemStack, Integer> entry : diff.entrySet()) {
+            int amount = entry.getValue();
+            if (amount > 0) {
+                double price = priceManager.getPrice(entry.getKey().getType().toString());
+                total += price * amount;
+            }
+        }
+
+        return total;
+    }
+
 
 
     public boolean isEntry(Block block) { return entryPos != null && entryPos.matches(block); }

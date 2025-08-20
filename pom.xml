@@ -13,6 +13,10 @@
       <id>papermc</id>
       <url>https://repo.papermc.io/repository/maven-public/</url>
     </repository>
+        <repository>
+        <id>spigot-vault-api</id>
+        <url>https://ci.ender.zone/plugin/repository/everything/</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -32,6 +36,11 @@
         <scope>provided</scope>
         </dependency>
 
+    <dependency>
+        <groupId>net.milkbowl.vault</groupId>
+        <artifactId>VaultAPI</artifactId>
+        <version>1.7</version>
+    </dependency>
   
   </dependencies>
 

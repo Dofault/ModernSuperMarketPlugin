@@ -44,6 +44,19 @@ public class PlayerListManager {
         }
     }
 
+    public boolean canPlayerExit(Player player) {
+        ItemStack[] contents = player.getInventory().getContents();
+
+        for (ItemStack item : contents) {
+            if (item == null) continue;
+
+            if (item.getAmount() > 0) return false;
+        }
+
+        return true;
+    }
+
+
     private void loadPlayersFromDB() {
         try {
             String sql = "SELECT uuid FROM shop_players";
@@ -111,7 +124,7 @@ public class PlayerListManager {
     }
 
 
-    private void saveInventory(Player player) {
+    public void saveInventory(Player player) {
         try {
             ItemStack[] contents = player.getInventory().getContents();
 

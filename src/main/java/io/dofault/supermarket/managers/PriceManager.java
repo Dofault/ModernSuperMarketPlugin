@@ -1,6 +1,7 @@
 package io.dofault.supermarket.managers;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -43,6 +44,10 @@ public class PriceManager {
     }
 
     public void setPrice(String itemID, double price) {
+        Material material = Material.matchMaterial(itemID.toUpperCase());
+        if (material == null) {
+            throw new IllegalArgumentException("Item invalide : " + itemID);
+        }
         priceConfig.set("items." + itemID + ".price", price);
         savePriceFile();
     }

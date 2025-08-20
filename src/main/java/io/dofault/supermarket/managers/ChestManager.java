@@ -51,6 +51,60 @@ public class ChestManager {
         }
     }
 
+
+
+
+    public void removeChest(Player player) {
+        Location loc = player.getLocation().getBlock().getLocation();
+
+        if (!chestConfig.contains("chests")) {
+            player.sendMessage("§cAucun coffre enregistré !");
+            return;
+        }
+
+        String targetChestId = null;
+
+        for (String chestId : chestConfig.getConfigurationSection("chests").getKeys(false)) {
+            String worldName = chestConfig.getString("chests." + chestId + ".world");
+            int x = chestConfig.getInt("chests." + chestId + ".x");
+            int y = chestConfig.getInt("chests." + chestId + ".y");
+            int z = chestConfig.getInt("chests." + chestId + ".z");
+
+            if (worldName.equals(loc.getWorld().getName())
+                    && x == loc.getBlockX()
+                    && y == loc.getBlockY()
+                    && z == loc.getBlockZ()) {
+                targetChestId = chestId;
+                break;
+            }
+        }
+
+        if (targetChestId == null) {
+            player.sendMessage("§cTu n'es pas sur un coffre enregistré !");
+            return;
+        }
+
+        // Supprime le coffre
+        chestConfig.set("chests." + targetChestId, null);
+
+        // Réindexe tous les coffres
+        List<String> chestIds = new ArrayList<>(chestConfig.getConfigurationSection("chests").getKeys(false));
+        Collections.sort(chestIds, Comparator.comparingInt(id -> Integer.parseInt(id.replace("chest", ""))));
+
+        int counter = 1;
+        for (String id : chestIds) {
+            if (!id.equals("chest" + counter)) {
+                chestConfig.set("chests.chest" + counter, chestConfig.getConfigurationSection("chests." + id).getValues(true));
+                chestConfig.set("chests." + id, null);
+            }
+            counter++;
+        }
+        chestCounter = counter - 1;
+
+        saveConfig();
+        player.sendMessage("§aLiaison du coffre supprimé !");
+    }
+
     public void addChest(Player player) {
         Location loc = player.getLocation().getBlock().getLocation(); // Position exacte du bloc
         Block block = loc.getBlock();
@@ -89,6 +143,10 @@ public class ChestManager {
         saveConfig();
         player.sendMessage("§aCoffre ajouté ! (ID: " + chestId + ")");
     }
+
+
+
+    
 
     public void addItemToChest(Player player, Material material, int amount) {
         Location loc = player.getLocation().getBlock().getLocation();
