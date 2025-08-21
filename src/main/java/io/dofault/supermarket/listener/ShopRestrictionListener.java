@@ -107,7 +107,9 @@ public class ShopRestrictionListener implements Listener {
             Location exitLoc = shopManager.getExitLocation(player);
             playerListManager.enterShop(player);
             player.teleport(exitLoc);
-            player.sendMessage(ChatColor.GREEN + "Vous êtes entré dans le shop !");
+            player.sendMessage(ChatColor.GREEN + "Bienvenue dans le shop !");
+            player.sendMessage("§a/supermarket pay §epour payer vos articles");
+            player.sendMessage("§a/supermarket difference §epour voir votre panier.");
 
             new BukkitRunnable() {
                 @Override
@@ -120,8 +122,7 @@ public class ShopRestrictionListener implements Listener {
                     double balance = shopManager.getBalance(player);
                     player.sendActionBar(
                         ChatColor.GOLD + "Balance: " + 
-                        ChatColor.AQUA + "$" + balance + // balance en surbrillance
-                        ChatColor.GOLD + " | /supermarket <pay/difference>"
+                        ChatColor.AQUA + "$" + balance
                     );
                 }
             }.runTaskTimer(plugin, 0L, 20L);
