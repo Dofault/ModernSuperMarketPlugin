@@ -1,6 +1,7 @@
 
 package io.dofault.supermarket.managers;
 
+import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 
@@ -79,9 +80,13 @@ public class PlayerListManager {
         }
     }
 
-    public void enterShop(Player player) {
+    public boolean enterShop(Player player) {
+        if (!saveInventory(player, true)) {
+            player.sendMessage("§cVous n'avez pas le droit d'entrer avec un BUNDLE !");
+            return false; // on stoppe ici
+        }
         playersInShop.add(player.getUniqueId());
-        saveInventory(player);
+        return true;
     }
 
     public void leaveShop(Player player) {
@@ -123,13 +128,21 @@ public class PlayerListManager {
         return new ItemStack[0]; // retourne un inventaire vide si aucun sauvegardé
     }
 
-
-    public void saveInventory(Player player) {
+    public boolean saveInventory(Player player, boolean isTryingToEnter) {
         try {
             ItemStack[] contents = player.getInventory().getContents();
 
-            // Affiche l'inventaire dans la console
-            plugin.getLogger().info("[DEBUG] Inventaire de " + player.getName() + " : " + Arrays.toString(contents));
+            // Vérifie s'il y a un bundle
+            if(isTryingToEnter) {
+                for (ItemStack item : contents) {
+                    if (item == null) continue;
+                    if (item.getType().getKey().getKey().contains("bundle")) {
+                        plugin.getLogger().warning(player.getName() + " tried to enter with a bundle!");
+                        return false; // interdit
+                    }
+                }
+            }
+
 
             // Sérialisation via YamlConfiguration
             YamlConfiguration yaml = new YamlConfiguration();
@@ -143,13 +156,14 @@ public class PlayerListManager {
             ps.executeUpdate();
             ps.close();
 
-            plugin.getLogger().info("[DEBUG] Inventaire de " + player.getName() + " sauvegardé.");
+            plugin.getLogger().info("[DEBUG] Inventory of " + player.getName() + " saved.");
+            return true;
         } catch (Exception e) {
-            plugin.getLogger().severe("[DEBUG] Erreur sauvegarde inventaire : " + e.getMessage());
+            plugin.getLogger().severe("[DEBUG] Error saving inventory: " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
-
     private void loadInventory(Player player) {
         try {
             String sql = "SELECT inventory FROM shop_players WHERE uuid=?";

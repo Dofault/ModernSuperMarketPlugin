@@ -4,8 +4,10 @@ import io.dofault.supermarket.managers.ChestManager;
 import io.dofault.supermarket.managers.PlayerListManager;
 import io.dofault.supermarket.managers.ShopManager;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Boat;
@@ -81,69 +83,100 @@ public class ShopRestrictionListener implements Listener {
            }
        }
 
-       if(playerListManager.isInShop(player.getUniqueId())) {
-           e.setCancelled(true);
+        if (playerListManager.isInShop(player.getUniqueId())) {
+            plugin.getLogger().warning(
+                "[EXPLOIT_ATTEMPT] Player " + player.getName() + " is in shop but tried to open a Container outside!"
+            );
 
-       }
+            e.setCancelled(true);
+        }
 
    }
 
+   @EventHandler
+    public void onBlockPlace(BlockPlaceEvent e) {
+        if (playerListManager.isInShop(e.getPlayer().getUniqueId())) {
+            e.setCancelled(true);
+        }
+    }
+
 
    
-    @EventHandler
-    public void onPlayerClick(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND) return; // ignore OFF_HAND
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+@EventHandler
+public void onPlayerClick(PlayerInteractEvent event) {
+    if (event.getHand() != EquipmentSlot.HAND) return; // ignore OFF_HAND
 
-        Block blockClicked = event.getClickedBlock();
-        if (blockClicked == null) return;
-        if (!blockClicked.getType().name().contains("GLASS")) return;
+    Player player = event.getPlayer();
+    Block blockClicked = event.getClickedBlock();
+    if (blockClicked == null) return;
 
-        Player player = event.getPlayer();
-        Block blockBelow = player.getLocation().getBlock();
+    // --- OBSIDIAN CHECKS ---
+    if ((blockClicked.getType() == Material.IRON_BLOCK) && playerListManager.isInShop(player.getUniqueId())) {
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            shopManager.showInventoryDifference(player);
+            event.setCancelled(true);
+            return;
+        }
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            shopManager.payUser(player);
+            event.setCancelled(true);
+            return;
+        }
+    }
 
-        if (shopManager.isEntry(blockBelow) && !playerListManager.isInShop(player.getUniqueId())) {
+    // --- SHOP ENTRY/EXIT LOGIC ---
+    if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+    if (!blockClicked.getType().name().contains("GLASS")) return;
+
+    Block blockBelow = player.getLocation().getBlock();
+
+    // ENTRY
+    if (shopManager.isEntry(blockBelow) && !playerListManager.isInShop(player.getUniqueId())) {
+        if (playerListManager.enterShop(player)) {
             chestManager.reloadChests();
             Location exitLoc = shopManager.getExitLocation(player);
             playerListManager.enterShop(player);
             player.teleport(exitLoc);
-            player.sendMessage(ChatColor.GREEN + "Bienvenue dans le shop !");
-            player.sendMessage("§a/supermarket pay §epour payer vos articles");
-            player.sendMessage("§a/supermarket difference §epour voir votre panier.");
+
+            player.sendMessage(ChatColor.GOLD + "Bienvenue dans le shop !");
+            player.sendMessage(ChatColor.DARK_GRAY + "---------------------------------");
+
+            player.sendMessage(ChatColor.YELLOW + "Sur le block d'OBSIDIENNE :");
+            player.sendMessage(ChatColor.GRAY + "- " + ChatColor.GREEN + "Click gauche " + ChatColor.WHITE + "pour voir votre panier.");
+            player.sendMessage(ChatColor.GRAY + "- " + ChatColor.GREEN + "Click droit " + ChatColor.WHITE + "pour payer vos articles.");
 
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     if (!playerListManager.isInShop(player.getUniqueId())) {
-                        this.cancel(); // auto-détruit la tâche
+                        this.cancel();
                         return;
                     }
 
                     double balance = shopManager.getBalance(player);
                     player.sendActionBar(
-                        ChatColor.GOLD + "Balance: " + 
+                        ChatColor.GOLD + "Balance: " +
                         ChatColor.AQUA + "$" + balance
                     );
                 }
             }.runTaskTimer(plugin, 0L, 20L);
         }
-        else
-        {
-            if (shopManager.isExit(blockBelow) && playerListManager.isInShop(player.getUniqueId())) {
-                if (shopManager.canPlayerExit(player)) {
-                    Location entryLoc = shopManager.getEntryLocation(player);
-                    playerListManager.leaveShop(player);
-                    player.teleport(entryLoc);
-                    
-                    player.sendMessage(ChatColor.GREEN + "Vous êtes sorti du shop !");
-                } else {
-                    player.sendMessage(ChatColor.RED + "Vous devez payer pour pouvoir sortir !");
-                }
-            }
-        }
-
-
+        return;
     }
+
+    // EXIT
+    if (shopManager.isExit(blockBelow) && playerListManager.isInShop(player.getUniqueId())) {
+        if (shopManager.canPlayerExit(player)) {
+            Location entryLoc = shopManager.getEntryLocation(player);
+            playerListManager.leaveShop(player);
+            player.teleport(entryLoc);
+            player.sendMessage(ChatColor.GREEN + "Vous êtes sorti du shop !");
+        } else {
+            player.sendMessage(ChatColor.RED + "Vous devez payer pour pouvoir sortir !");
+        }
+    }
+}
+
 
 
 

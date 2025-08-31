@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -254,8 +255,14 @@ public class ChestManager {
 
         if (!(block.getState() instanceof Container container)) return;
 
-        // On vide l'inventaire avant de remettre les items
-        container.getInventory().clear();
+        Inventory inv;
+        if (container instanceof DoubleChest doubleChest) {
+            inv = doubleChest.getInventory();
+        } else {
+            inv = container.getInventory();
+        }
+
+        inv.clear();
 
         List<String> items = chestConfig.getStringList("chests." + chestId + ".items");
         for (String itemStr : items) {
@@ -272,7 +279,7 @@ public class ChestManager {
                 continue;
             }
 
-            container.getInventory().addItem(new ItemStack(mat, amount));
+            inv.addItem(new ItemStack(mat, amount));
         }
     }
 

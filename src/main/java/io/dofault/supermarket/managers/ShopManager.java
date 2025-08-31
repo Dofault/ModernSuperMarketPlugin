@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 
 import io.dofault.supermarket.main.Main;
 import io.dofault.supermarket.model.BlockPos;
+import net.md_5.bungee.api.ChatColor;
 import net.milkbowl.vault.economy.Economy;
 
 import java.util.HashMap;
@@ -25,8 +26,10 @@ public class ShopManager {
     private BlockPos exitPos;
     private PlayerListManager playerListManager;
     private PriceManager priceManager;
+    private Economy economy;
 
-    public ShopManager(Main plugin, PlayerListManager playerlist, PriceManager priceManager) {
+    public ShopManager(Main plugin, Economy economy, PlayerListManager playerlist, PriceManager priceManager) {
+        this.economy= economy;
         this.plugin = plugin;
         this.priceManager = priceManager;
         this.playerListManager = playerlist;
@@ -35,10 +38,18 @@ public class ShopManager {
 
     public void setEntryPosSetting(Location loc) {
         entryPosSetting = new BlockPos(loc.getWorld().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        Bukkit.getLogger().info(
+            "Entry position set to " + loc.getWorld().getName() +
+            " [" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]"
+        );
     }
 
     public void setExitPosSetting(Location loc) {
         exitPosSetting = new BlockPos(loc.getWorld().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+         Bukkit.getLogger().info(
+            "Exit position set to " + loc.getWorld().getName() +
+            " [" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]"
+        );
     }
 
     public boolean saveShop() {
@@ -55,6 +66,8 @@ public class ShopManager {
         plugin.getConfig().set("shop.exit.z", exitPosSetting.getZ());
 
         plugin.saveConfig();
+        Bukkit.getLogger().info("Configuration shop saved");
+
         loadShop();
         return true;
     }
@@ -74,6 +87,9 @@ public class ShopManager {
                     plugin.getConfig().getInt("shop.exit.z")
             );
         }
+
+        Bukkit.getLogger().info("Chests shop reloaded");
+
     }
 
     // --- Dans ShopManager ---
@@ -114,6 +130,43 @@ public class ShopManager {
         return diff;
     }
 
+
+
+    public void showInventoryDifference(Player player) {
+        Map<ItemStack, Integer> diff = getInventoryDifference(player);
+
+                if (diff.isEmpty()) {
+                    player.sendMessage(ChatColor.GREEN + "Aucune différence.");
+                } else {
+                    double totalPrice = 0.0;
+                    player.sendMessage(ChatColor.YELLOW + "Vos articles :");
+
+                    for (Map.Entry<ItemStack, Integer> entry : diff.entrySet()) {
+                        ItemStack item = entry.getKey();
+                        int delta = entry.getValue();
+
+                        String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+                                ? item.getItemMeta().getDisplayName()
+                                : item.getType().name();
+
+                        if (delta > 0) {
+                            double itemPrice = priceManager.hasPrice(item.getType().name())
+                                    ? priceManager.getPrice(item.getType().name())
+                                    : 0.0;
+                            totalPrice += itemPrice * delta;
+                            player.sendMessage(ChatColor.GREEN + itemName + " (+" + delta + ") -> " + itemPrice + "€ chacun");
+                        } else {
+                            player.sendMessage(ChatColor.RED + itemName + " (" + delta + ")");
+                        }
+
+                        // Log dans la console
+                        Bukkit.getLogger().info("Différence pour " + player.getName() + ": " + itemName + " -> " + delta);
+                    }
+
+                    player.sendMessage(ChatColor.GOLD + "Total à payer : " + totalPrice + "€");
+                }
+    }
+
     public boolean canPlayerExit(Player player) {
         Map<ItemStack, Integer> diff = getInventoryDifference(player);
 
@@ -127,7 +180,7 @@ public class ShopManager {
         return true; // Aucun surplus détecté
     }
 
-    public boolean payUser(Player player, Economy economy) {
+    public boolean payUser(Player player) {
         Map<ItemStack, Integer> diff = getInventoryDifference(player);
         double totalCost = 0;
 
@@ -150,7 +203,7 @@ public class ShopManager {
         }
 
         // Sauvegarde l'inventaire actuel uniquement si le paiement a réussi
-        playerListManager.saveInventory(player);
+        playerListManager.saveInventory(player, false);
         return true;
     }
 

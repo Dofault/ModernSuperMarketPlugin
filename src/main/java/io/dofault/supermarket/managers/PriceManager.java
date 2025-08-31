@@ -53,7 +53,7 @@ public class PriceManager {
     }
 
     public double getPrice(String itemID) {
-        return priceConfig.getDouble("items." + itemID + ".price", -1); // -1 si pas trouvé
+        return priceConfig.getDouble("items." + itemID + ".price", 0); // -1 si pas trouvé
     }
 
     public boolean hasPrice(String itemID) {
