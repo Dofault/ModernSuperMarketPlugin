@@ -24,9 +24,11 @@ public class ChestManager {
     private final FileConfiguration chestConfig;
     private PriceManager priceManager;
     private int chestCounter = 0;
+    private LangManager lang;
 
-    public ChestManager(JavaPlugin plugin, PriceManager priceManager) {
+    public ChestManager(JavaPlugin plugin, LangManager lang, PriceManager priceManager) {
         this.plugin = plugin;
+        this.lang = lang;
         this.priceManager = priceManager;
         chestFile = new File(plugin.getDataFolder(), "chest.yml");
         if (!chestFile.exists()) {
@@ -52,14 +54,12 @@ public class ChestManager {
         }
     }
 
-
-
-
     public void removeChest(Player player) {
         Location loc = player.getLocation().getBlock().getLocation();
 
         if (!chestConfig.contains("chests")) {
-            player.sendMessage("§cAucun coffre enregistré !");
+            player.sendMessage(lang.get("shop-no-chest"));
+
             return;
         }
 
@@ -81,7 +81,8 @@ public class ChestManager {
         }
 
         if (targetChestId == null) {
-            player.sendMessage("§cTu n'es pas sur un coffre enregistré !");
+            player.sendMessage(lang.get("shop-not-registered-chest"));
+
             return;
         }
 
@@ -95,7 +96,8 @@ public class ChestManager {
         int counter = 1;
         for (String id : chestIds) {
             if (!id.equals("chest" + counter)) {
-                chestConfig.set("chests.chest" + counter, chestConfig.getConfigurationSection("chests." + id).getValues(true));
+                chestConfig.set("chests.chest" + counter,
+                        chestConfig.getConfigurationSection("chests." + id).getValues(true));
                 chestConfig.set("chests." + id, null);
             }
             counter++;
@@ -103,7 +105,8 @@ public class ChestManager {
         chestCounter = counter - 1;
 
         saveConfig();
-        player.sendMessage("§aLiaison du coffre supprimé !");
+        player.sendMessage(lang.get("shop-chest-unlinked"));
+
     }
 
     public void addChest(Player player) {
@@ -111,7 +114,8 @@ public class ChestManager {
         Block block = loc.getBlock();
 
         if (!(block.getState() instanceof Container)) {
-            player.sendMessage("§cIl n'y a pas de coffre à ta position !");
+            player.sendMessage(lang.get("shop-no-chest-here"));
+
             return;
         }
 
@@ -126,7 +130,8 @@ public class ChestManager {
                         && x == loc.getBlockX()
                         && y == loc.getBlockY()
                         && z == loc.getBlockZ()) {
-                    player.sendMessage("§cCe coffre est déjà enregistré !");
+                    player.sendMessage(lang.get("shop-chest-already-registered"));
+
                     return;
                 }
             }
@@ -142,23 +147,22 @@ public class ChestManager {
         chestConfig.set("chests." + chestId + ".items", new ArrayList<String>());
 
         saveConfig();
-        player.sendMessage("§aCoffre ajouté ! (ID: " + chestId + ")");
+        player.sendMessage(lang.get("shop-chest-added", Map.of("id", chestId)));
+
     }
-
-
-
-    
 
     public void addItemToChest(Player player, Material material, int amount) {
         Location loc = player.getLocation().getBlock().getLocation();
 
         if (!chestConfig.contains("chests")) {
-            player.sendMessage("§cAucun coffre enregistré !");
+            player.sendMessage(lang.get("shop-no-chest"));
+
             return;
         }
 
         if (!priceManager.hasPrice(material.name())) {
-            player.sendMessage("§cCe materiau n'a pas de prix defini !");
+            player.sendMessage(lang.get("shop-material-no-price"));
+
             return;
         }
 
@@ -180,7 +184,8 @@ public class ChestManager {
         }
 
         if (targetChestId == null) {
-            player.sendMessage("§cTu n'es pas sur un coffre enregistré !");
+            player.sendMessage(lang.get("shop-not-registered-chest"));
+
             return;
         }
 
@@ -191,19 +196,22 @@ public class ChestManager {
 
         reloadChests();
 
-        player.sendMessage("§aAjouté " + amount + " " + material.name() + " au coffre !");
+        player.sendMessage(lang.get("shop-add-item-chest", Map.of(
+                "amount", String.valueOf(amount),
+                "material", material.name())));
     }
-
 
     // Retourne true si une location correspond à un coffre enregistré
     public boolean isChest(Location loc) {
         for (String chestId : getChestsIds()) {
-            if (getChestLocation(chestId).equals(loc)) return true;
+            if (getChestLocation(chestId).equals(loc))
+                return true;
         }
         return false;
     }
 
-    // Retourne l'inventaire du coffre à une location, ou null si ce n'est pas un coffre
+    // Retourne l'inventaire du coffre à une location, ou null si ce n'est pas un
+    // coffre
     public Inventory getChestInventory(Location loc) {
         for (String chestId : getChestsIds()) {
             if (getChestLocation(chestId).equals(loc)) {
@@ -215,7 +223,6 @@ public class ChestManager {
         }
         return null;
     }
-
 
     public Set<String> getChestsIds() {
         if (!chestConfig.contains("chests") || chestConfig.getConfigurationSection("chests") == null) {
@@ -233,7 +240,8 @@ public class ChestManager {
     }
 
     public void reloadChests() {
-        if (!chestConfig.contains("chests")) return;
+        if (!chestConfig.contains("chests"))
+            return;
 
         for (String chestId : chestConfig.getConfigurationSection("chests").getKeys(false)) {
             reloadChest(chestId);
@@ -241,19 +249,22 @@ public class ChestManager {
     }
 
     public void reloadChest(String chestId) {
-        if (!chestConfig.contains("chests." + chestId)) return;
+        if (!chestConfig.contains("chests." + chestId))
+            return;
 
         String worldName = chestConfig.getString("chests." + chestId + ".world");
         int x = chestConfig.getInt("chests." + chestId + ".x");
         int y = chestConfig.getInt("chests." + chestId + ".y");
         int z = chestConfig.getInt("chests." + chestId + ".z");
 
-        if (Bukkit.getWorld(worldName) == null) return;
+        if (Bukkit.getWorld(worldName) == null)
+            return;
 
         Location loc = new Location(Bukkit.getWorld(worldName), x, y, z);
         Block block = loc.getBlock();
 
-        if (!(block.getState() instanceof Container container)) return;
+        if (!(block.getState() instanceof Container container))
+            return;
 
         Inventory inv;
         if (container instanceof DoubleChest doubleChest) {
@@ -267,10 +278,12 @@ public class ChestManager {
         List<String> items = chestConfig.getStringList("chests." + chestId + ".items");
         for (String itemStr : items) {
             String[] parts = itemStr.split(":");
-            if (parts.length != 2) continue;
+            if (parts.length != 2)
+                continue;
 
             Material mat = Material.matchMaterial(parts[0]);
-            if (mat == null) continue;
+            if (mat == null)
+                continue;
 
             int amount;
             try {
@@ -282,7 +295,6 @@ public class ChestManager {
             inv.addItem(new ItemStack(mat, amount));
         }
     }
-
 
     public int getChestCounter() {
         return chestCounter;

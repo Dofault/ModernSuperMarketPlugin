@@ -1,5 +1,6 @@
 package io.dofault.supermarket.commands;
 
+import io.dofault.supermarket.managers.LangManager;
 import io.dofault.supermarket.managers.PlayerListManager;
 import io.dofault.supermarket.managers.ShopManager;
 import org.bukkit.ChatColor;
@@ -9,8 +10,10 @@ public class PayCommand implements SupermarketCommand {
 
     private final ShopManager shopManager;
     private final PlayerListManager playerListManager;
+    private final LangManager lang;
 
-    public PayCommand(ShopManager shopManager, PlayerListManager playerListManager) {
+    public PayCommand(LangManager lang, ShopManager shopManager, PlayerListManager playerListManager) {
+        this.lang = lang;
         this.shopManager = shopManager;
         this.playerListManager = playerListManager;
     }
@@ -23,7 +26,8 @@ public class PayCommand implements SupermarketCommand {
     @Override
     public boolean execute(Player player, String[] args) {
         if (!playerListManager.isInShop(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "Vous devez être dans le shop !");
+            player.sendMessage(lang.get("shop-must-be-inside"));
+
             return true;
         }
 

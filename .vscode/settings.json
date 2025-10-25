@@ -1,4 +1,6 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive",
+    "editor.formatOnSave": true,
+    "google-java-format.executable": "C:\\javaformatprettier\\google-java-format-1.30.0-all-deps.jar",
     "java.compile.nullAnalysis.mode": "automatic"
+
 }

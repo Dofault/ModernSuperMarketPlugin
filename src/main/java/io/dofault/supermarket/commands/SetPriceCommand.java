@@ -1,6 +1,10 @@
 package io.dofault.supermarket.commands;
 
+import io.dofault.supermarket.managers.LangManager;
 import io.dofault.supermarket.managers.PriceManager;
+
+import java.util.Map;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -8,8 +12,10 @@ import org.bukkit.entity.Player;
 public class SetPriceCommand implements SupermarketCommand {
 
     private final PriceManager priceManager;
+    private final LangManager lang;
 
-    public SetPriceCommand(PriceManager priceManager) {
+    public SetPriceCommand(LangManager lang, PriceManager priceManager) {
+        this.lang = lang;
         this.priceManager = priceManager;
     }
 
@@ -21,13 +27,15 @@ public class SetPriceCommand implements SupermarketCommand {
     @Override
     public boolean execute(Player player, String[] args) {
         if (args.length != 3) {
-            player.sendMessage(ChatColor.RED + "Usage: /supermarket setprice <item> <prix>");
+            player.sendMessage(lang.get("shop-setprice-usage"));
+
             return true;
         }
 
         Material material = Material.matchMaterial(args[1].toUpperCase());
         if (material == null) {
-            player.sendMessage(ChatColor.RED + "Item invalide !");
+            player.sendMessage(lang.get("shop-invalid-item"));
+
             return true;
         }
 
@@ -35,12 +43,15 @@ public class SetPriceCommand implements SupermarketCommand {
         try {
             price = Double.parseDouble(args[2]);
         } catch (NumberFormatException e) {
-            player.sendMessage(ChatColor.RED + "Prix invalide !");
+            player.sendMessage(lang.get("shop-invalid-price"));
+
             return true;
         }
 
         priceManager.setPrice(material.name(), price);
-        player.sendMessage(ChatColor.GREEN + "Prix de " + material.name() + " défini à " + price);
+        player.sendMessage(lang.get("shop-price-set", Map.of(
+                "material", material.name(),
+                "price", String.valueOf(price))));
         return true;
     }
 }

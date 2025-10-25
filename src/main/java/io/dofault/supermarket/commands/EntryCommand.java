@@ -1,6 +1,7 @@
 package io.dofault.supermarket.commands;
 
 import io.dofault.supermarket.managers.ChestManager;
+import io.dofault.supermarket.managers.LangManager;
 import io.dofault.supermarket.managers.ShopManager;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -9,8 +10,10 @@ public class EntryCommand implements SupermarketCommand {
 
     private final ShopManager shopManager;
     private final ChestManager chestManager;
+    private final LangManager lang;
 
-    public EntryCommand(ShopManager shopManager, ChestManager chestManager) {
+    public EntryCommand(LangManager lang, ShopManager shopManager, ChestManager chestManager) {
+        this.lang = lang;
         this.shopManager = shopManager;
         this.chestManager = chestManager;
     }
@@ -24,7 +27,8 @@ public class EntryCommand implements SupermarketCommand {
     public boolean execute(Player player, String[] args) {
         chestManager.reloadChests();
         shopManager.setEntryPosSetting(player.getLocation());
-        player.sendMessage(ChatColor.GREEN + "Position d'entrée enregistrée !");
+        player.sendMessage(lang.get("shop-entry-saved"));
+
         return true;
     }
 }

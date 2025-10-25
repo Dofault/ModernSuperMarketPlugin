@@ -2,25 +2,26 @@ package io.dofault.supermarket.commands;
 
 import io.dofault.supermarket.managers.ChestManager;
 import io.dofault.supermarket.managers.LangManager;
+import io.dofault.supermarket.managers.SellManager;
 
 import org.bukkit.entity.Player;
 
-public class AddChestCommand implements SupermarketCommand {
+public class AddSellBlockCommand implements SupermarketCommand {
 
-    private final ChestManager chestManager;
+    private final SellManager sellManager;
 
-    public AddChestCommand(ChestManager chestManager) {
-        this.chestManager = chestManager;
+    public AddSellBlockCommand(SellManager sellManager) {
+        this.sellManager = sellManager;
     }
 
     @Override
     public String getName() {
-        return "addchest";
+        return "addsellblock";
     }
 
     @Override
     public boolean execute(Player player, String[] args) {
-        chestManager.addChest(player);
+        sellManager.addSellBlock(player);
         return true;
     }
 }

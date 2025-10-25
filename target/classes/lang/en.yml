@@ -1,0 +1,98 @@
+shop-exit: "&aYou have exited the shop!"
+shop-must-pay: "&cYou must pay to be able to exit!"
+shop-cannot-open-outside: "&cYou cannot open this shop chest from outside!"
+
+shop-welcome-line1: "&7&l----&r&7( &2WELCOME TO THE SHOP&7 )&7&l----"
+shop-welcome-instruction: "&7Use the &eTARGET &7block:"
+shop-welcome-leftclick: "&8- &a&lLeft Click &7→ view your &fbasket 🛒"
+shop-welcome-rightclick: "&8- &a&lRight Click &7→ pay for your &fitems 💰"
+
+shop-no-difference: "&aNo difference."
+
+shop-your-items: "&eYour items:"
+
+shop-item-line: "&d➤ &a%item% &e(+%delta%) &f→ &b%price% ₿"
+
+shop-total: "&6&l💰 Total: &b&l%total% ₿"
+
+shop-not-enough-money: "&cYou don't have enough money to pay for your inventory! &e(Your balance: 💰 %balance% ₿)"
+
+shop-paid-success: "&a✅ You have paid &6&l%total%&r&a ₿ for your items!"
+
+shop-difference-log: "Difference for %player%: %item% -> %delta%"
+shop-item-price: "&aPrice of %item%: %price%"
+shop-no-price: "&cNo price set for %item%"
+
+shop-no-chest: "&cNo chest registered!"
+shop-cart-actionbar: "&6Cart: &b%balance% ₿"
+
+
+shop-not-registered-chest: "&cYou are not on a registered chest!"
+
+shop-chest-unlinked: "&aChest link removed!"
+shop-no-chest-here: "&cThere is no chest at your location!"
+shop-chest-already-registered: "&cThis chest is already registered!"
+shop-chest-added: "&aChest added! (ID: %id%)"
+shop-no-chest: "&cNo chest registered!"
+shop-material-no-price: "&cThis material has no price set!"
+shop-not-registered-chest: "&cYou are not on a registered chest!"
+shop-add-item-chest: "&aAdded %amount% %material% to the chest!"
+shop-entry-saved: "&aEntry position saved!"
+shop-exit-saved: "&aShop exit position saved!"
+shop-saved: "&aShop saved!"
+shop-define-entry-exit-first: "&cYou must first define the entry and exit!"
+shop-setprice-usage: "&cUsage: /supermarket setprice <item> <price>"
+shop-invalid-item: "&cInvalid item!"
+shop-invalid-price: "&cInvalid price!"
+shop-price-set: "&aPrice of %material% set to %price%"
+shop-must-be-inside: "&cYou must be inside the shop!"
+shop-additemchest-usage: "&cUsage: /supermarket additemchest <item> <amount>"
+shop-invalid-number: "&cInvalid number!"
+shop-no-item-entry: "&cYou are not allowed to enter with a %item%!"
+
+
+# /help
+shop-commands-header: "&e» General Commands:"
+shop-command-entry-exit: "&b/supermarket &fentry|exit &7- &oSet the shop entry and exit points."
+shop-command-pay: "&b/supermarket &fpay &7- &oPay for your purchases."
+shop-command-save: "&b/supermarket &fsave &7- &oSave the shop's entry and exit points."
+shop-command-setprice: "&b/supermarket &fsetprice <item> <price> &7- &oSet the price of an item."
+shop-command-difference: "&b/supermarket &fdifference &7- &oShow the inventory difference."
+shop-command-addchest: "&b/supermarket &faddchest &7- &oAdd the chest under you to the shop."
+shop-command-removechest: "&b/supermarket &fremovechest &7- &oRemove the chest under you from the shop."
+shop-command-additemchest: "&b/supermarket &fadditemchest <item> <amount> &7- &oAdd the item to the chest."
+shop-not-in-shop: "&cYou must be inside the shop to do that!"
+shop-sell-unpaid-items: "&cYou cannot open the sell block while you have items to pay for!"
+shop-no-sellblock: "&cNo sell block registered!"
+shop-sell-success: "&aYou sold your items for &6%amount% ₿!"
+
+
+
+shop-sell-nothing: "&cYou have nothing to sell!"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

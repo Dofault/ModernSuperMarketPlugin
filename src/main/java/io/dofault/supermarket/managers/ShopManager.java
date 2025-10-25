@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.Sound;
 
 import io.dofault.supermarket.main.Main;
 import io.dofault.supermarket.model.BlockPos;
@@ -26,34 +27,37 @@ public class ShopManager {
     private BlockPos exitPos;
     private PlayerListManager playerListManager;
     private PriceManager priceManager;
+    private LangManager lang;
     private Economy economy;
 
-    public ShopManager(Main plugin, Economy economy, PlayerListManager playerlist, PriceManager priceManager) {
-        this.economy= economy;
+    public ShopManager(Main plugin, LangManager lang, Economy economy, PlayerListManager playerlist,
+            PriceManager priceManager) {
+        this.economy = economy;
+        this.lang = lang;
         this.plugin = plugin;
         this.priceManager = priceManager;
         this.playerListManager = playerlist;
+
         loadShop();
     }
 
     public void setEntryPosSetting(Location loc) {
         entryPosSetting = new BlockPos(loc.getWorld().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         Bukkit.getLogger().info(
-            "Entry position set to " + loc.getWorld().getName() +
-            " [" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]"
-        );
+                "Entry position set to " + loc.getWorld().getName() +
+                        " [" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]");
     }
 
     public void setExitPosSetting(Location loc) {
         exitPosSetting = new BlockPos(loc.getWorld().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-         Bukkit.getLogger().info(
-            "Exit position set to " + loc.getWorld().getName() +
-            " [" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]"
-        );
+        Bukkit.getLogger().info(
+                "Exit position set to " + loc.getWorld().getName() +
+                        " [" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]");
     }
 
     public boolean saveShop() {
-        if (entryPosSetting == null || exitPosSetting == null) return false;
+        if (entryPosSetting == null || exitPosSetting == null)
+            return false;
 
         plugin.getConfig().set("shop.entry.world", entryPosSetting.getWorld());
         plugin.getConfig().set("shop.entry.x", entryPosSetting.getX());
@@ -78,18 +82,16 @@ public class ShopManager {
                     plugin.getConfig().getString("shop.entry.world"),
                     plugin.getConfig().getInt("shop.entry.x"),
                     plugin.getConfig().getInt("shop.entry.y"),
-                    plugin.getConfig().getInt("shop.entry.z")
-            );
+                    plugin.getConfig().getInt("shop.entry.z"));
             exitPos = new BlockPos(
                     plugin.getConfig().getString("shop.exit.world"),
                     plugin.getConfig().getInt("shop.exit.x"),
                     plugin.getConfig().getInt("shop.exit.y"),
-                    plugin.getConfig().getInt("shop.exit.z")
-            );
+                    plugin.getConfig().getInt("shop.exit.z"));
+
         }
 
         Bukkit.getLogger().info("Chests shop reloaded");
-
     }
 
     // --- Dans ShopManager ---
@@ -124,59 +126,69 @@ public class ShopManager {
             int savedAmount = savedMap.getOrDefault(key, 0);
             int currentAmount = currentMap.getOrDefault(key, 0);
             int delta = currentAmount - savedAmount;
-            if (delta != 0) diff.put(key, delta);
+            if (delta != 0)
+                diff.put(key, delta);
         }
 
         return diff;
     }
 
-
-
     public void showInventoryDifference(Player player) {
         Map<ItemStack, Integer> diff = getInventoryDifference(player);
 
-                if (diff.isEmpty()) {
-                    player.sendMessage(ChatColor.GREEN + "Aucune différence.");
-                } else {
-                    double totalPrice = 0.0;
-                    player.sendMessage(ChatColor.YELLOW + "Vos articles :");
+        if (diff.isEmpty()) {
+            player.sendMessage(lang.get("shop-no-difference"));
+        } else {
+            double totalPrice = 0.0;
+            player.sendMessage(lang.get("shop-your-items"));
 
-                    for (Map.Entry<ItemStack, Integer> entry : diff.entrySet()) {
-                        ItemStack item = entry.getKey();
-                        int delta = entry.getValue();
+            for (Map.Entry<ItemStack, Integer> entry : diff.entrySet()) {
+                ItemStack item = entry.getKey();
+                int delta = entry.getValue();
 
-                        String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-                                ? item.getItemMeta().getDisplayName()
-                                : item.getType().name();
+                String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+                        ? item.getItemMeta().getDisplayName()
+                        : item.getType().name();
 
-                        if (delta > 0) {
-                            double itemPrice = priceManager.hasPrice(item.getType().name())
-                                    ? priceManager.getPrice(item.getType().name())
-                                    : 0.0;
-                            totalPrice += itemPrice * delta;
-                            player.sendMessage(ChatColor.GREEN + itemName + " (+" + delta + ") -> " + itemPrice + "€ chacun");
-                        } else {
-                            player.sendMessage(ChatColor.RED + itemName + " (" + delta + ")");
-                        }
-
-                        // Log dans la console
-                        Bukkit.getLogger().info("Différence pour " + player.getName() + ": " + itemName + " -> " + delta);
-                    }
-
-                    player.sendMessage(ChatColor.GOLD + "Total à payer : " + totalPrice + "€");
+                if (delta > 0) {
+                    double itemPrice = priceManager.hasPrice(item.getType().name())
+                            ? priceManager.getPrice(item.getType().name())
+                            : 0.0;
+                    totalPrice += itemPrice * delta;
+                    player.sendMessage(lang.get("shop-item-line", Map.of(
+                            "item", itemName,
+                            "delta", String.valueOf(delta),
+                            "price", String.valueOf(itemPrice))));
                 }
+
+                // Log dans la console
+
+                Bukkit.getLogger().info("Difference for " + player.getName() + ": " + itemName + " -> " + delta);
+
+            }
+
+            player.sendMessage(lang.get("shop-total", Map.of("total", String.valueOf(totalPrice))));
+
+        }
+        player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 0.9f);
+
     }
 
     public boolean canPlayerExit(Player player) {
         Map<ItemStack, Integer> diff = getInventoryDifference(player);
+        double totalCost = 0;
 
         for (Map.Entry<ItemStack, Integer> entry : diff.entrySet()) {
-            if (entry.getValue() > 0) {
-                // Le joueur a plus d'items que dans son inventaire sauvegardé
-                return false;
+            int amount = entry.getValue();
+            if (amount > 0) {
+                // Conversion en String via Material
+                double price = priceManager.getPrice(entry.getKey().getType().toString());
+                totalCost += price * amount;
             }
         }
-
+        if (totalCost > 0) {
+            return false;
+        }
         return true; // Aucun surplus détecté
     }
 
@@ -195,21 +207,24 @@ public class ShopManager {
 
         if (totalCost > 0) {
             if (!economy.has(player, totalCost)) {
-                player.sendMessage("§cVous n'avez pas assez d'argent pour payer votre inventaire !");
+                player.sendMessage(lang.get("shop-not-enough-money", Map.of(
+                        "balance", String.valueOf(economy.getBalance(player)))));
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 2.0f, 0.5f); // plus aigu et plus fort
+
                 return false;
             }
             economy.withdrawPlayer(player, totalCost);
-            player.sendMessage("§aVous avez payé §6" + totalCost + " §a€ pour vos articles.");
+            player.sendMessage(lang.get("shop-paid-success", Map.of("total", String.valueOf(totalCost))));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_CELEBRATE, 1f, 1f); // un peu plus fort et plus
+                                                                                             // grave
+
+            // Sauvegarde l'inventaire actuel uniquement si le paiement a réussi
+            playerListManager.saveInventory(player, false);
         }
 
-        // Sauvegarde l'inventaire actuel uniquement si le paiement a réussi
-        playerListManager.saveInventory(player, false);
         return true;
     }
 
-
-
-    
     public double getBalance(Player player) {
         Map<ItemStack, Integer> diff = getInventoryDifference(player);
         double total = 0.0;
@@ -225,18 +240,23 @@ public class ShopManager {
         return total;
     }
 
+    public boolean isEntry(Block block) {
+        return entryPos != null && entryPos.matches(block);
+    }
 
-
-    public boolean isEntry(Block block) { return entryPos != null && entryPos.matches(block); }
-    public boolean isExit(Block block) { return exitPos != null && exitPos.matches(block); }
+    public boolean isExit(Block block) {
+        return exitPos != null && exitPos.matches(block);
+    }
 
     public Location getEntryLocation(Player player) {
-        return new Location(Bukkit.getWorld(entryPos.getWorld()), entryPos.getX() + 0.5, entryPos.getY(), entryPos.getZ() + 0.5,
+        return new Location(Bukkit.getWorld(entryPos.getWorld()), entryPos.getX() + 0.5, entryPos.getY(),
+                entryPos.getZ() + 0.5,
                 player.getLocation().getYaw(), player.getLocation().getPitch());
     }
 
     public Location getExitLocation(Player player) {
-        return new Location(Bukkit.getWorld(exitPos.getWorld()), exitPos.getX() + 0.5, exitPos.getY(), exitPos.getZ() + 0.5,
+        return new Location(Bukkit.getWorld(exitPos.getWorld()), exitPos.getX() + 0.5, exitPos.getY(),
+                exitPos.getZ() + 0.5,
                 player.getLocation().getYaw(), player.getLocation().getPitch());
     }
 }

@@ -9,21 +9,24 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public class PriceManager {
 
     private final JavaPlugin plugin;
     private File priceFile;
     private FileConfiguration priceConfig;
+    private LangManager lang;
 
-    public PriceManager(JavaPlugin plugin) {
+    public PriceManager(JavaPlugin plugin, LangManager lang) {
         this.plugin = plugin;
+        this.lang = lang;
         this.priceFile = new File(plugin.getDataFolder(), "prices.yml");
 
         if (!priceFile.exists()) {
             try {
                 plugin.getDataFolder().mkdirs(); // crée le dossier plugin si nécessaire
-                priceFile.createNewFile();       // crée prices.yml vide
+                priceFile.createNewFile(); // crée prices.yml vide
             } catch (IOException e) {
                 plugin.getLogger().severe("Impossible de créer prices.yml !");
                 e.printStackTrace();
@@ -32,7 +35,6 @@ public class PriceManager {
 
         priceConfig = YamlConfiguration.loadConfiguration(priceFile);
     }
-
 
     public void savePriceFile() {
         try {
@@ -63,9 +65,12 @@ public class PriceManager {
     public void sendPriceToPlayer(Player player, String itemID) {
         if (hasPrice(itemID)) {
             double price = getPrice(itemID);
-            player.sendMessage(ChatColor.GREEN + "Prix de " + itemID + " : " + price);
+            player.sendMessage(lang.get("shop-item-price", Map.of(
+                    "item", itemID,
+                    "price", String.valueOf(price))));
         } else {
-            player.sendMessage(ChatColor.RED + "Aucun prix défini pour " + itemID);
+            player.sendMessage(lang.get("shop-no-price", Map.of("item", itemID)));
+
         }
     }
 }

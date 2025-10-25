@@ -4,7 +4,6 @@ package io.dofault.supermarket.managers;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,13 +14,17 @@ import java.util.*;
 public class PlayerListManager {
     private final JavaPlugin plugin;
     private Connection connection;
+
+    private LangManager lang;
     private final Set<UUID> playersInShop = new HashSet<>();
 
-    public PlayerListManager(JavaPlugin plugin) {
+    public PlayerListManager(JavaPlugin plugin, LangManager lang) {
         this.plugin = plugin;
+        this.lang = lang;
         connect();
         createTable();
         loadPlayersFromDB();
+        loadBannedItems();
 
     }
 
@@ -49,14 +52,15 @@ public class PlayerListManager {
         ItemStack[] contents = player.getInventory().getContents();
 
         for (ItemStack item : contents) {
-            if (item == null) continue;
+            if (item == null)
+                continue;
 
-            if (item.getAmount() > 0) return false;
+            if (item.getAmount() > 0)
+                return false;
         }
 
         return true;
     }
-
 
     private void loadPlayersFromDB() {
         try {
@@ -82,8 +86,7 @@ public class PlayerListManager {
 
     public boolean enterShop(Player player) {
         if (!saveInventory(player, true)) {
-            player.sendMessage("§cVous n'avez pas le droit d'entrer avec un BUNDLE !");
-            return false; // on stoppe ici
+            return false;
         }
         playersInShop.add(player.getUniqueId());
         return true;
@@ -97,7 +100,6 @@ public class PlayerListManager {
     public boolean isInShop(UUID playerUUID) {
         return playersInShop.contains(playerUUID);
     }
-
 
     public ItemStack[] getSavedInventory(Player player) {
         try {
@@ -128,21 +130,38 @@ public class PlayerListManager {
         return new ItemStack[0]; // retourne un inventaire vide si aucun sauvegardé
     }
 
+    private final Set<Material> bannedItems = new HashSet<>();
+
+    private void loadBannedItems() {
+        List<String> configItems = plugin.getConfig().getStringList("banned-items");
+        for (String name : configItems) {
+            try {
+                Material mat = Material.valueOf(name.toUpperCase());
+                bannedItems.add(mat);
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("[Shop] L'item interdit '" + name + "' n'existe pas !");
+            }
+        }
+    }
+
     public boolean saveInventory(Player player, boolean isTryingToEnter) {
         try {
             ItemStack[] contents = player.getInventory().getContents();
 
-            // Vérifie s'il y a un bundle
-            if(isTryingToEnter) {
+            if (isTryingToEnter) {
                 for (ItemStack item : contents) {
-                    if (item == null) continue;
-                    if (item.getType().getKey().getKey().contains("bundle")) {
-                        plugin.getLogger().warning(player.getName() + " tried to enter with a bundle!");
+                    if (item == null)
+                        continue;
+                    if (bannedItems.contains(item.getType())) {
+                        plugin.getLogger()
+                                .warning(player.getName() + " tried to enter with a banned item: " + item.getType());
+
+                        player.sendMessage(lang.get("shop-no-item-entry", Map.of("item", item.getType().name())));
+
                         return false; // interdit
                     }
                 }
             }
-
 
             // Sérialisation via YamlConfiguration
             YamlConfiguration yaml = new YamlConfiguration();
@@ -164,6 +183,7 @@ public class PlayerListManager {
             return false;
         }
     }
+
     private void loadInventory(Player player) {
         try {
             String sql = "SELECT inventory FROM shop_players WHERE uuid=?";
@@ -177,7 +197,9 @@ public class PlayerListManager {
                     YamlConfiguration yaml = new YamlConfiguration();
                     yaml.loadFromString(data);
                     List<ItemStack> items = (List<ItemStack>) yaml.getList("items");
-                    player.getInventory().setContents(items.toArray(new ItemStack[0]));
+
+                    // player.getInventory().setContents(items.toArray(new ItemStack[0]));
+
                     plugin.getLogger().info("[DEBUG] Inventaire de " + player.getName() + " chargé.");
 
                     // Supprimer l'entrée de la DB après le chargement

@@ -1,0 +1,22 @@
+language: fr
+buy_block: IRON_BLOCK
+sell_block: TARGET
+# Items interdits dans le shop (le joueur ne peut pas entrer avec ces items)
+banned-items:
+  - BUNDLE
+  - WHITE_BUNDLE
+  - ORANGE_BUNDLE
+  - MAGENTA_BUNDLE
+  - LIGHT_BLUE_BUNDLE
+  - YELLOW_BUNDLE
+  - LIME_BUNDLE
+  - PINK_BUNDLE
+  - GRAY_BUNDLE
+  - LIGHT_GRAY_BUNDLE
+  - CYAN_BUNDLE
+  - PURPLE_BUNDLE
+  - BLUE_BUNDLE
+  - BROWN_BUNDLE
+  - GREEN_BUNDLE
+  - RED_BUNDLE
+  - BLACK_BUNDLE
